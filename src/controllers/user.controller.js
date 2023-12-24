@@ -1,12 +1,11 @@
 import { logger } from "../Utils/logger.js"
-import db from "../Utils/server.js"
 import bcrypt from "bcrypt"
-import { userService } from "../services/user.service.js"
+import { service } from "../services/service.js"
 import { createUserValidation, updateUserValidation } from "../validations/user.validation.js"
 
 export const getAllUsers = async (req, res) => {
     try {
-        const result = await userService("SELECT * FROM users")
+        const result = await service("SELECT * FROM users")
         logger.info("Succes Get All Users")
         res.status(200).json({
             status: true,
@@ -25,7 +24,7 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
     const id = parseInt(req.params.id)
     try {
-        const result = await userService("SELECT * FROM users WHERE id = ?", [id])
+        const result = await service("SELECT * FROM users WHERE id = ?", [id])
         if (result.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -55,18 +54,17 @@ export const createUser = async (req, res) => {
     }
 
     try {
-        const checkEmail = await userService("SELECT * FROM users WHERE email = ?", [value.email]);
-        const checkUsername = await userService("SELECT * FROM users WHERE username = ?", [value.username]);
+        const checkEmail = await service("SELECT * FROM users WHERE email = ?", [value.email]);
+        const checkUsername = await service("SELECT * FROM users WHERE username = ?", [value.username]);
 
         if (checkEmail.length > 0) {
             return res.status(400).json({ status: false, message: "Email Already Exist" });
         }
-
         if (checkUsername.length > 0) {
             return res.status(400).json({ status: false, message: "Username Already Exist" });
         }
         const hashPassword = bcrypt.hashSync(value.password, 10);
-        await addUserToDb("INSERT INTO users (username, email, password, img) VALUES (?, ?, ?, ?)", [
+        await service("INSERT INTO users (username, email, password, img) VALUES (?, ?, ?, ?)", [
             value.username,
             value.email,
             hashPassword,
@@ -82,31 +80,35 @@ export const createUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     const id = parseInt(req.params.id)
-    db.query(
-        "DELETE FROM users WHERE id = ?", [id],
-        (err, result) => {
-            if (err) {
-                logger.error(err.message)
-                res.status(500).json({
-                    status: false,
-                    message: err.message
-                })
-            }
-            logger.info("Succes Delete User")
-            res.status(200).json({
-                status: true,
-                message: "Succes Delete User",
+    try {
+        const userFormDb = await service("SELECT * FROM users WHERE id = ?", [id])
+        if (userFormDb.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "User Not Found"
             })
         }
-    )
+        await service("DELETE FROM users WHERE id = ?", [id])
+        logger.info("Succes Delete User")
+        res.status(200).json({
+            status: true,
+            message: "Succes Delete User"
+        })
+    } catch (error) {
+        logger.error(error.message)
+        res.status(500).json({
+            status: false,
+            message: error.message
+        })
+    }
 }
 
 export const updateUser = async (req, res) => {
     const id = parseInt(req.params.id)
     try {
         const { error, value } = updateUserValidation(req.body);
-        const checkEmail = await userService("SELECT * FROM users WHERE email = ?", [value.email]);
-        const checkUsername = await userService("SELECT * FROM users WHERE username = ?", [value.username]);
+        const checkEmail = await service("SELECT * FROM users WHERE email = ?", [value.email]);
+        const checkUsername = await service("SELECT * FROM users WHERE username = ?", [value.username]);
         if (checkEmail.length > 0) {
             return res.status(400).json({ status: false, message: "Email Already Exist" });
         }
@@ -117,14 +119,14 @@ export const updateUser = async (req, res) => {
             logger.error(`ERR: product - update = ${error} `);
             return res.status(400).send({ status: false, message: error.details[0].message });
         }
-        const userFormDb = await userService("SELECT * FROM users WHERE id = ?", [id])
+        const userFormDb = await service("SELECT * FROM users WHERE id = ?", [id])
         if (userFormDb.length === 0) {
             return res.status(404).json({
                 status: false,
                 message: "User Not Found"
             })
         } else {
-            await userService("UPDATE users SET username = ?,password = ?, email = ?, img = ? WHERE id = ?", [
+            await service("UPDATE users SET username = ?,password = ?, email = ?, img = ? WHERE id = ?", [
                 value.username || userFormDb[0].username,
                 value.password || userFormDb[0].password,
                 value.email || userFormDb[0].email,

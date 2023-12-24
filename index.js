@@ -10,6 +10,10 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+app.use((req, res, next) => {
+    logger.info(req.path, req.method);
+    next();
+});
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
