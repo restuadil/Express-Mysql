@@ -1,7 +1,7 @@
 import { logger } from "../Utils/logger.js"
-import bcrypt from "bcrypt"
 import { service } from "../services/service.js"
 import { createUserValidation, updateUserValidation } from "../validations/user.validation.js"
+import { hashing } from "../utils/hashing.js"
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -63,14 +63,14 @@ export const createUser = async (req, res) => {
         if (checkUsername.length > 0) {
             return res.status(400).json({ status: false, message: "Username Already Exist" });
         }
-        const hashPassword = bcrypt.hashSync(value.password, 10);
+        const hashPassword = hashing(value.password);
         await service("INSERT INTO users (username, email, password, img) VALUES (?, ?, ?, ?)", [
             value.username,
             value.email,
             hashPassword,
             value.img,
         ]);
-
+        logger.info("Succes Create User");
         res.status(201).json({ status: true, message: "Succes Create User" });
     } catch (error) {
         logger.error(error.message);
