@@ -1,6 +1,6 @@
 import { logger } from "../Utils/logger.js"
 import { service } from "../services/service.js"
-import { createCategoryProductValidation, updateCategoryProductValidation } from "../validations/categoryProduct.js"
+import { createCategoryProductValidation, updateCategoryProductValidation } from "../validations/categoryProduct.validation.js"
 
 
 export const getAllCategoryProduct = async (req, res) => {

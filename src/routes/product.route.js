@@ -6,6 +6,6 @@ export const ProductRouter = Router();
 ProductRouter.get('/', getAllProducts)
 ProductRouter.get('/:id', getProductById)
 ProductRouter.post('/', requireUser, createProduct)
-ProductRouter.put('/:id', updateProduct)
-ProductRouter.delete('/:id', deleteProduct)
+ProductRouter.put('/:id', requireUser, updateProduct)
+ProductRouter.delete('/:id', requireUser, deleteProduct)
 
