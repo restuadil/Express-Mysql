@@ -19,4 +19,6 @@ db.connect((err) => {
     logger.info("MYSQL Connected");
 })
 
+
+
 export default db

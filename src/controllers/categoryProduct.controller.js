@@ -1,6 +1,6 @@
 import { logger } from "../Utils/logger.js"
 import { service } from "../services/service.js"
-import { createCategoryProductValidation } from "../validations/categoryProduct.js"
+import { createCategoryProductValidation, updateCategoryProductValidation } from "../validations/categoryProduct.js"
 
 
 export const getAllCategoryProduct = async (req, res) => {
@@ -63,7 +63,7 @@ export const updateCategoryProduct = async (req, res) => {
     const id = parseInt(req.params.id)
     const categoryFromDB = await service("SELECT * FROM category_products WHERE id = ?", [id])
     if (categoryFromDB.length === 0) return res.status(404).json({ status: false, message: "Category Not Found" })
-    const { error, value } = createCategoryProductValidation(req.body)
+    const { error, value } = updateCategoryProductValidation(req.body)
     const { category } = value
     if (error) {
         logger.error(`ERR: categoryProduct - update = ${error} `)

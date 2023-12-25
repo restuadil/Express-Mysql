@@ -1,8 +1,11 @@
 import { Router } from "express";
-import { createProduct, getAllProducts, getProductById } from "../controllers/product.controller.js";
+import { createProduct, deleteProduct, getAllProducts, getProductById, updateProduct } from "../controllers/product.controller.js";
+import { requireUser } from "../middleware/auth.js";
 
 export const ProductRouter = Router();
-
 ProductRouter.get('/', getAllProducts)
 ProductRouter.get('/:id', getProductById)
-ProductRouter.post('/', createProduct)
+ProductRouter.post('/', requireUser, createProduct)
+ProductRouter.put('/:id', updateProduct)
+ProductRouter.delete('/:id', deleteProduct)
+
