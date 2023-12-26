@@ -4,7 +4,18 @@ import { createReviewValidation, updateReviewValidation } from "../validations/r
 
 export const getAllReviews = async (req, res) => {
     try {
-        const result = await service("SELECT * FROM reviews")
+        const result = await service(`
+        SELECT  
+            r.id,
+            u.username,
+            p.name,
+            r.review
+        FROM reviews r
+        INNER JOIN 
+            users u ON r.user_id = u.id
+        INNER JOIN
+            products p ON r.product_id = p.id;
+        `)
         logger.info("Succes Get All Reviews")
         res.status(200).json({
             status: true,
@@ -22,7 +33,19 @@ export const getAllReviews = async (req, res) => {
 export const getReviewById = async (req, res) => {
     const id = parseInt(req.params.id)
     try {
-        const result = await service("SELECT * FROM reviews WHERE id = ?", [id])
+        const result = await service(`
+        SELECT  
+            r.id,
+            u.username,
+            p.name,
+            r.review
+        FROM reviews r
+        INNER JOIN 
+            users u ON r.user_id = u.id
+        INNER JOIN
+            products p ON r.product_id = p.id
+        WHERE r.id = ?;`,
+            [id])
         if (result.length === 0) return res.status(400).json({ status: false, message: "Review Not Found" })
         logger.info("Succes Get All Reviews")
         res.status(200).json({

@@ -3,8 +3,10 @@ import { service } from "../services/service.js"
 import { createProductValidation, updateProductValidation } from "../validations/product.validation.js";
 
 export const getAllProducts = async (req, res) => {
+    const { category, page = 1, price, s } = req.query;
+
     try {
-        const result = await service(`
+        let query = `
             SELECT
                 p.id,
                 p.name,
@@ -18,22 +20,50 @@ export const getAllProducts = async (req, res) => {
             FROM
                 products p
             INNER JOIN
-                category_products cp ON p.category_id = cp.id;
-        `);
-        logger.info("Success Get All Products");
+                category_products cp ON p.category_id = cp.id
+        `;
+
+        const queryParams = [];
+
+        if (category) {
+            query += ` WHERE cp.category = ?`;
+            queryParams.push(category);
+        }
+
+        if (price) {
+            query += ` ORDER BY p.price ${price.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'}`;
+        }
+
+        if (s) {
+            query += ` AND p.name LIKE ?`;
+            queryParams.push(`%${s}%`);
+        }
+
+        const limit = 10;
+        const offset = (parseInt(page) - 1) * limit;
+        query += ` LIMIT ?, ?`;
+        queryParams.push(offset, limit);
+
+        const result = await service(query, queryParams);
+
         res.status(200).json({
             status: true,
             message: "Success Get All Products",
+            pagination: {
+                page: parseInt(page),
+                total: result.length,
+            },
             data: result
         });
     } catch (error) {
-        logger.error(error.message);
         res.status(500).json({
             status: false,
             message: error.message
         });
     }
 };
+
+
 
 export const getProductById = async (req, res) => {
     const id = parseInt(req.params.id)
